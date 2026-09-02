@@ -7,6 +7,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const DATA_DIR = path.join(__dirname, "data");
 const DATA_FILE = path.join(DATA_DIR, "students.json");
+const MEMO_FILE = path.join(DATA_DIR, "memos.json");
 const sessions = new Map();
 
 app.use(express.json());
@@ -25,6 +26,9 @@ function ensureData() {
       }
     ], null, 2));
   }
+  if (!fs.existsSync(MEMO_FILE)) {
+    fs.writeFileSync(MEMO_FILE, "[]");
+  }
 }
 
 function readStudents() {
@@ -35,6 +39,16 @@ function readStudents() {
 function writeStudents(students) {
   ensureData();
   fs.writeFileSync(DATA_FILE, JSON.stringify(students, null, 2));
+}
+
+function readMemos() {
+  ensureData();
+  return JSON.parse(fs.readFileSync(MEMO_FILE, "utf8"));
+}
+
+function writeMemos(memos) {
+  ensureData();
+  fs.writeFileSync(MEMO_FILE, JSON.stringify(memos, null, 2));
 }
 
 function makeToken() {
@@ -128,8 +142,52 @@ app.post("/api/logout", (req, res) => {
   res.json({ ok: true });
 });
 
-app.get("/health", (_req, res) => res.json({ ok: true, app: "PolePlus" }));
+// MEMO form backend. Submissions are stored server-side in data/memos.json.
+app.post("/api/memos", (req, res) => {
+  const name = String(req.body.name || "").trim();
+  const email = String(req.body.email || "").trim().toLowerCase();
+  const subject = String(req.body.subject || "").trim();
+  const message = String(req.body.message || "").trim();
+
+  if (!name || !email || !subject || !message) {
+    return res.status(400).json({ ok: false, message: "Please complete all fields." });
+  }
+
+  if (name.length > 100 || email.length > 160 || subject.length > 160 || message.length > 5000) {
+    return res.status(400).json({ ok: false, message: "One or more fields are too long." });
+  }
+
+  const memos = readMemos();
+  const record = {
+    id: crypto.randomUUID(),
+    name,
+    email,
+    subject,
+    message,
+    createdAt: new Date().toISOString()
+  };
+
+  memos.unshift(record);
+  writeMemos(memos);
+
+  res.status(201).json({ ok: true, message: "Your memo has been sent.", id: record.id });
+});
+
+app.get("/api/memos", (req, res) => {
+  const adminKey = process.env.ADMIN_KEY;
+  if (!adminKey) {
+    return res.status(503).json({ ok: false, message: "Admin access is not configured. Set ADMIN_KEY on the server." });
+  }
+
+  if (req.get("x-admin-key") !== adminKey) {
+    return res.status(401).json({ ok: false, message: "Unauthorized." });
+  }
+
+  res.json({ ok: true, memos: readMemos() });
+});
+
+app.get("/health", (_req, res) => res.json({ ok: true, app: "PolePlus + Memo" }));
 
 app.listen(PORT, () => {
-  console.log(`PolePlus running on port ${PORT}`);
+  console.log(`PolePlus + Memo running on port ${PORT}`);
 });
