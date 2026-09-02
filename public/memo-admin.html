@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MEMO Admin</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Inter,Arial,sans-serif;background:#f5f8fc;color:#172033}.wrap{max-width:1100px;margin:auto;padding:28px 18px}.top{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:22px}.brand{font-size:26px;font-weight:800;color:#087cff}.sub{color:#667085;font-size:14px;margin-top:4px}.panel{background:#fff;border:1px solid #e6eaf0;border-radius:18px;padding:18px;box-shadow:0 10px 30px rgba(20,40,80,.06)}.login{max-width:430px;margin:80px auto}.input{width:100%;padding:13px 14px;border:1px solid #d8dee8;border-radius:10px;font-size:15px;outline:none}.input:focus{border-color:#087cff}.btn{border:0;border-radius:10px;padding:12px 16px;font-weight:700;cursor:pointer;background:#087cff;color:#fff}.btn.secondary{background:#eef4ff;color:#087cff}.btn.danger{background:#fff0f0;color:#c62828}.actions{display:flex;gap:10px;align-items:center}.toolbar{display:flex;gap:12px;align-items:center;margin-bottom:16px}.search{flex:1}.count{font-size:14px;color:#667085;white-space:nowrap}.status{margin:10px 0;font-size:14px;color:#667085}.table-wrap{overflow:auto}.table{width:100%;border-collapse:collapse;min-width:760px}.table th,.table td{padding:13px 10px;border-bottom:1px solid #edf0f4;text-align:left;vertical-align:top}.table th{font-size:12px;text-transform:uppercase;color:#667085}.answer{white-space:pre-wrap;max-width:260px;word-break:break-word}.empty{text-align:center;padding:45px;color:#667085}.hidden{display:none!important}@media(max-width:650px){.top{align-items:flex-start;flex-direction:column}.toolbar{flex-direction:column;align-items:stretch}.count{white-space:normal}}
+</style>
+</head>
+<body>
+<div id="loginView" class="wrap login">
+  <div class="panel">
+    <div class="brand">MEMO Admin</div>
+    <div class="sub">Private submission dashboard</div>
+    <p>Enter your admin key to view submitted forms.</p>
+    <input id="key" class="input" type="password" placeholder="Admin key" autocomplete="off">
+    <button id="loginBtn" class="btn" style="width:100%;margin-top:12px">Open Dashboard</button>
+    <div id="loginStatus" class="status"></div>
+  </div>
+</div>
+
+<div id="dashboard" class="wrap hidden">
+  <div class="top">
+    <div><div class="brand">MEMO Admin</div><div class="sub">Form submissions</div></div>
+    <div class="actions"><button id="refreshBtn" class="btn secondary">Refresh</button><button id="logoutBtn" class="btn danger">Log out</button></div>
+  </div>
+  <div class="panel">
+    <div class="toolbar"><input id="search" class="input search" placeholder="Search submissions..."><div id="count" class="count">0 submissions</div></div>
+    <div id="status" class="status"></div>
+    <div class="table-wrap">
+      <table class="table">
+        <thead><tr><th>Date</th><th>Answer 1</th><th>Answer 2</th><th>Answer 3</th><th>Answer 4</th><th>Action</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <div id="empty" class="empty hidden">No submissions found.</div>
+  </div>
+</div>
+<script>
+let adminKey=''; let submissions=[];
+const $=id=>document.getElementById(id);
+function escapeHtml(value){return String(value??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
+function formatDate(v){const d=new Date(v);return Number.isNaN(d.getTime())?v:d.toLocaleString();}
+async function load(){
+  $('status').textContent='Loading...';
+  try{const r=await fetch('/api/memos',{headers:{'x-admin-key':adminKey}});if(r.status===401)throw new Error('Invalid admin key.');if(!r.ok)throw new Error((await r.json()).message||'Could not load submissions.');submissions=await r.json();render();$('status').textContent='';}
+  catch(e){$('status').textContent=e.message;$('status').style.color='#c62828';}
+}
+function render(){const q=$('search').value.trim().toLowerCase();const filtered=submissions.filter(x=>[x.answer1,x.answer2,x.answer3,x.answer4].some(v=>String(v??'').toLowerCase().includes(q)));$('count').textContent=`${filtered.length} submission${filtered.length===1?'':'s'}`;$('rows').innerHTML=filtered.map(x=>`<tr><td>${escapeHtml(formatDate(x.createdAt))}</td><td class="answer">${escapeHtml(x.answer1)}</td><td class="answer">${escapeHtml(x.answer2)}</td><td class="answer">${escapeHtml(x.answer3)}</td><td class="answer">${escapeHtml(x.answer4)}</td><td><button class="btn danger" onclick="removeSubmission('${escapeHtml(x.id)}')">Delete</button></td></tr>`).join('');$('empty').classList.toggle('hidden',filtered.length!==0);}
+async function removeSubmission(id){if(!confirm('Delete this submission?'))return;try{const r=await fetch('/api/memos/'+encodeURIComponent(id),{method:'DELETE',headers:{'x-admin-key':adminKey}});if(!r.ok)throw new Error('Delete failed.');submissions=submissions.filter(x=>x.id!==id);render();}catch(e){alert(e.message);}}
+$('loginBtn').onclick=async()=>{adminKey=$('key').value.trim();if(!adminKey){$('loginStatus').textContent='Enter your admin key.';return;}const r=await fetch('/api/memos',{headers:{'x-admin-key':adminKey}});if(!r.ok){$('loginStatus').textContent='Invalid admin key or admin access is not configured.';adminKey='';return;}submissions=await r.json();$('loginView').classList.add('hidden');$('dashboard').classList.remove('hidden');render();};
+$('key').addEventListener('keydown',e=>{if(e.key==='Enter')$('loginBtn').click();});
+$('search').addEventListener('input',render);$('refreshBtn').onclick=load;$('logoutBtn').onclick=()=>{adminKey='';submissions=[];$('key').value='';$('dashboard').classList.add('hidden');$('loginView').classList.remove('hidden');};
+</script>
+</body>
+</html>
