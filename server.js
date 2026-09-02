@@ -25,6 +25,13 @@ function writeMemos(memos) {
   fs.writeFileSync(MEMO_FILE, JSON.stringify(memos, null, 2));
 }
 
+function requireAdmin(req, res, next) {
+  const key = process.env.ADMIN_KEY;
+  if (!key) return res.status(503).json({ message: 'Admin access is not configured.' });
+  if (req.get('x-admin-key') !== key) return res.status(401).json({ message: 'Unauthorized.' });
+  next();
+}
+
 app.post('/api/memos', (req, res) => {
   const { answer1, answer2, answer3, answer4 } = req.body || {};
   const answers = [answer1, answer2, answer3, answer4].map(v => String(v ?? '').trim());
@@ -43,11 +50,16 @@ app.post('/api/memos', (req, res) => {
   res.json({ success: true });
 });
 
-app.get('/api/memos', (req, res) => {
-  const key = process.env.ADMIN_KEY;
-  if (!key) return res.status(503).json({ message: 'Admin access is not configured.' });
-  if (req.get('x-admin-key') !== key) return res.status(401).json({ message: 'Unauthorized.' });
+app.get('/api/memos', requireAdmin, (req, res) => {
   res.json(readMemos());
+});
+
+app.delete('/api/memos/:id', requireAdmin, (req, res) => {
+  const memos = readMemos();
+  const next = memos.filter(memo => memo.id !== req.params.id);
+  if (next.length === memos.length) return res.status(404).json({ message: 'Submission not found.' });
+  writeMemos(next);
+  res.json({ success: true });
 });
 
 app.get('/health', (_req, res) => res.json({ ok: true, app: 'MEMO' }));
