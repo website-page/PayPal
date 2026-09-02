@@ -1,9 +1,0 @@
-{
-  "name": "poleplus-school-project",
-  "version": "1.0.0",
-  "private": true,
-  "description": "PolePlus school project using email and school name verification.",
-  "main": "server.js",
-  "scripts": {"start": "node server.js"},
-  "dependencies": {"express": "^5.1.0"}
-}
