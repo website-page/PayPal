@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PolePlus — Student Access</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <main class="page-shell">
+    <section class="card reveal">
+      <div class="brand"><span class="brand-mark">P</span><span>PolePlus</span></div>
+      <div class="eyebrow">SSCS SCHOOL PROJECT</div>
+      <h1>Welcome back</h1>
+      <p class="muted">Use your student email and school name to continue.</p>
+
+      <form id="loginForm" class="form">
+        <label for="email">Student email</label>
+        <input id="email" type="email" autocomplete="email" placeholder="student@example.test" required>
+
+        <label for="schoolName">School name</label>
+        <input id="schoolName" type="text" autocomplete="organization" placeholder="PolePlus Demo School" required>
+
+        <p id="message" class="message" role="alert"></p>
+        <button type="submit">Continue <span>→</span></button>
+      </form>
+
+      <p class="demo-note">Demo project only — do not enter real student credentials or personal data.</p>
+    </section>
+  </main>
+  <script src="js/app.js"></script>
+</body>
+</html>
