@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PolePlus — My Test Database</title>
+  <link rel="stylesheet" href="public/css/style.css">
+  <style>
+    .records { margin-top: 24px; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 620px; }
+    th, td { padding: 12px; border-bottom: 1px solid rgba(0,0,0,.1); text-align: left; }
+    th { font-size: .82rem; text-transform: uppercase; letter-spacing: .06em; }
+    .notice { margin-top: 18px; font-size: .88rem; opacity: .75; }
+  </style>
+</head>
+<body>
+  <main class="page-shell">
+    <section class="card reveal">
+      <div class="brand"><span class="brand-mark">P</span><span>PolePlus</span></div>
+      <div class="eyebrow">PERSONAL TEST DATABASE</div>
+      <h1>My test records</h1>
+      <p class="muted">This page displays dummy records committed for development. It is not a student-information database.</p>
+      <div class="records">
+        <table>
+          <thead><tr><th>Email</th><th>School</th><th>Seat</th><th>Favourite food</th><th>Created</th></tr></thead>
+          <tbody id="records"></tbody>
+        </table>
+      </div>
+      <p class="notice">Use fictional/test values only. Do not place real students' personal information in this repository.</p>
+    </section>
+  </main>
+  <script>
+    fetch('data/test-records.json')
+      .then(r => r.json())
+      .then(records => {
+        document.getElementById('records').innerHTML = records.map(r => `
+          <tr>
+            <td>${escapeHtml(r.email)}</td>
+            <td>${escapeHtml(r.schoolName)}</td>
+            <td>${escapeHtml(r.seatNumber)}</td>
+            <td>${escapeHtml(r.favouriteFood)}</td>
+            <td>${escapeHtml(new Date(r.createdAt).toLocaleString())}</td>
+          </tr>`).join('');
+      })
+      .catch(() => {
+        document.getElementById('records').innerHTML = '<tr><td colspan="5">Could not load the test database.</td></tr>';
+      });
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+    }
+  </script>
+</body>
+</html>
