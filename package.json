@@ -1,0 +1,9 @@
+{
+  "name": "memo-form",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MEMO multi-step form demo",
+  "main": "server.js",
+  "scripts": {"start": "node server.js"},
+  "dependencies": {"express": "^5.1.0"}
+}
