@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#003087">
+  <title>MEMO — Send a Memo</title>
+  <link rel="stylesheet" href="memo.css">
+</head>
+<body>
+  <main class="shell">
+    <section class="card" aria-label="MEMO form">
+      <div class="brand" aria-label="MEMO">
+        <div class="logo">M</div>
+        <div class="brand-name">MEMO</div>
+      </div>
+
+      <div class="intro">
+        <h1>Send a memo</h1>
+        <p>Write a message and send it securely to the MEMO inbox.</p>
+      </div>
+
+      <form id="memoForm" novalidate>
+        <label for="name">Name</label>
+        <input id="name" name="name" type="text" maxlength="100" autocomplete="name" placeholder="Your name" required>
+
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" maxlength="160" autocomplete="email" placeholder="you@example.com" required>
+
+        <label for="subject">Subject</label>
+        <input id="subject" name="subject" type="text" maxlength="160" placeholder="What is this memo about?" required>
+
+        <label for="message">Message</label>
+        <textarea id="message" name="message" maxlength="5000" rows="6" placeholder="Write your memo here..." required></textarea>
+
+        <button id="sendButton" type="submit">Send memo</button>
+        <div id="status" class="status" role="status" aria-live="polite"></div>
+      </form>
+
+      <p class="privacy">Use this demo with information you are comfortable storing on the server.</p>
+    </section>
+  </main>
+  <script src="memo.js"></script>
+</body>
+</html>
