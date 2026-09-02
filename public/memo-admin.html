@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MEMO — Inbox</title>
+  <link rel="stylesheet" href="memo.css">
+  <style>
+    .admin{max-width:900px;margin:auto}.table-wrap{overflow:auto;border:1px solid #e5e7eb;border-radius:12px}.memo-table{width:100%;border-collapse:collapse;min-width:720px}.memo-table th,.memo-table td{text-align:left;padding:13px;border-bottom:1px solid #eaecf0;font-size:13px;vertical-align:top}.memo-table th{background:#f8fafc}.memo-table tr:last-child td{border-bottom:0}.key-row{display:flex;gap:8px;margin-bottom:18px}.key-row input{flex:1}.empty{text-align:center;color:#667085;padding:30px}.message{white-space:pre-wrap;max-width:360px}
+  </style>
+</head>
+<body>
+  <main class="shell admin">
+    <section class="card">
+      <div class="brand"><div class="logo">M</div><div class="brand-name">MEMO</div></div>
+      <div class="intro"><h1>Memo inbox</h1><p>Private admin view for messages stored by your backend.</p></div>
+      <div class="key-row"><input id="adminKey" type="password" placeholder="Enter ADMIN_KEY" autocomplete="off"><button id="load" type="button">Load</button></div>
+      <div id="status" class="status"></div>
+      <div class="table-wrap"><table class="memo-table"><thead><tr><th>Date</th><th>Name</th><th>Email</th><th>Subject</th><th>Message</th></tr></thead><tbody id="rows"><tr><td colspan="5" class="empty">Enter your admin key to load memos.</td></tr></tbody></table></div>
+    </section>
+  </main>
+  <script>
+    const key=document.getElementById('adminKey'),load=document.getElementById('load'),rows=document.getElementById('rows'),status=document.getElementById('status');
+    const esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+    load.addEventListener('click',async()=>{status.className='status';status.textContent='Loading...';try{const r=await fetch('/api/memos',{headers:{'x-admin-key':key.value}});const d=await r.json();if(!r.ok)throw new Error(d.message||'Unable to load inbox.');rows.innerHTML=d.memos.length?d.memos.map(m=>`<tr><td>${esc(new Date(m.createdAt).toLocaleString())}</td><td>${esc(m.name)}</td><td>${esc(m.email)}</td><td>${esc(m.subject)}</td><td class="message">${esc(m.message)}</td></tr>`).join(''):'<tr><td colspan="5" class="empty">No memos yet.</td></tr>';status.textContent=`${d.memos.length} memo(s) loaded.`;status.className='status success';}catch(e){status.textContent=e.message;status.className='status error';}});
+  </script>
+</body>
+</html>
